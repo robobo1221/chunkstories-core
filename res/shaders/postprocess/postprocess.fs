@@ -146,7 +146,7 @@ void main() {
 
 	//Applies bloom
 	<ifdef doBloom>
-	compositeColor.rgb += texture(bloomBuffer, finalCoords).rgb;
+	compositeColor.rgb += pow(texture(bloomBuffer, finalCoords).rgb, vec3(gamma)) * pi;
 	<endif doBloom>
 	
 	//Gamma-corrects stuff
