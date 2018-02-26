@@ -85,10 +85,10 @@ vec3 ComputeVolumetricLight(vec3 background, vec4 worldSpacePosition, vec3 light
 	vec3 startRay = mat3(shadowMatrix) * untranslatedMVInv[3].xyz;
 	vec3 endRay = (shadowMatrix * (untranslatedMVInv * worldSpacePosition)).rgb;
 
-	vec3 increment = normalize(startRay - endRay) * distance(startRay, endRay) * oneOverSteps;
+	vec3 increment = (startRay - endRay) * oneOverSteps;
 	vec3 rayPosition = increment * bayer16(gl_FragCoord.xy) + endRay;
 
-	float weight = sqrt(dot(increment, increment));
+	float weight = clamp(sqrt(dot(increment, increment)), 0.0, 0.05);
 
 	float ray = 0.0;
 
@@ -100,18 +100,25 @@ vec3 ComputeVolumetricLight(vec3 background, vec4 worldSpacePosition, vec3 light
 		rayPosition += increment;
 	}
 	
-	float lDotU = dot(normalize(lightVec), vec3(0.0, 1.0, 0.0));
-	float lDotV = 1.0 - dot(normalize(lightVec), normalize(eyeDirection));
+	float lDotU = dot(normalize(-lightVec), vec3(0.0, 1.0, 0.0));
+	float lDotV = dot(normalize(lightVec), normalize(eyeDirection));
 	
-	vec3 sunLight_g = mix(getSkyAbsorption(skyColor, zenithDensity(lDotU + multiScatterPhase)), vec3(0.0), overcastFactor);//pow(sunColor, vec3(gamma));
-	float sunlightAmount = ray * shadowVisiblity * oneOverSteps * (1.0 / (lDotV*lDotV) * 0.02 ) * weight;
+	vec3 sunLight_g = sunLightColor;//pow(sunColor, vec3(gamma));
+	float sunlightAmount = ray * shadowVisiblity * oneOverSteps * weight * gPhase(lDotV, 0.9);
 
-	return sunlightAmount * sunLight_g;
+	return sunlightAmount * sunLight_g * pi;
 }
 
 float poltergeist(vec2 coordinate, float seed)
 {
     return fract(sin(dot(coordinate*seed, vec2(12.9898, 78.233)))*43758.5453);
+}
+
+vec3 jodieReinhardTonemap(vec3 c){
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    vec3 tc = c / (c + 1.0);
+
+    return mix(c / (l + 1.0), tc, tc);
 }
 
 void main() {
@@ -167,7 +174,7 @@ void main() {
 	);
 	compositeColor.rgb *= mix(vec3(1.0), overlayColor, clamp(pauseOverlayFade, 0.0, 1.0));
 
-	compositeColor.rgb = pow(jodieReinhardTonemap(compositeColor.rgb * 6.0), vec3(gamma));
+	compositeColor.rgb = pow(jodieReinhardTonemap(compositeColor.rgb * 5.0), vec3(gamma));
 	
 	//Ouputs
 	fragColor = compositeColor;
