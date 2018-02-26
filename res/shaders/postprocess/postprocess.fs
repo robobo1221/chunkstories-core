@@ -88,7 +88,7 @@ vec3 ComputeVolumetricLight(vec3 background, vec4 worldSpacePosition, vec3 light
 	vec3 increment = (startRay - endRay) * oneOverSteps;
 	vec3 rayPosition = increment * bayer16(gl_FragCoord.xy) + endRay;
 
-	float weight = clamp(sqrt(dot(increment, increment)), 0.0, 0.05);
+	float weight = clamp(sqrt(dot(increment, increment)), 0.0, 0.25);
 
 	float ray = 0.0;
 
@@ -104,7 +104,7 @@ vec3 ComputeVolumetricLight(vec3 background, vec4 worldSpacePosition, vec3 light
 	float lDotV = dot(normalize(lightVec), normalize(eyeDirection));
 	
 	vec3 sunLight_g = sunLightColor;//pow(sunColor, vec3(gamma));
-	float sunlightAmount = ray * shadowVisiblity * oneOverSteps * weight * gPhase(lDotV, 0.9);
+	float sunlightAmount = (ray * shadowVisiblity) * (oneOverSteps * weight) * (gPhase(lDotV, 0.9) * mCoeff);
 
 	return sunlightAmount * sunLight_g * pi;
 }
