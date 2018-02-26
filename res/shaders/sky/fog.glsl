@@ -4,8 +4,7 @@
 vec4 getFogColor(float time, vec3 eyePosition)
 {	
 	
-	float overCastRatio = clamp(overcastFactor * 2.0, 0.0, 1.0);
-	      overCastRatio *= overCastRatio;
+	float overCastRatio = clamp(aWeather * 2.0, 0.0, 1.0);
 	
 	float dist = clamp(length(eyePosition), 0.0, 4096.0) * mix(0.002, 0.02, overCastRatio);
 	float fogIntensity = 1.0 - exp2(-dist);	//Proper realistic fog distribution
